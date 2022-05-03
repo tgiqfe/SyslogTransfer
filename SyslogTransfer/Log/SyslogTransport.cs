@@ -53,7 +53,13 @@ namespace SyslogTransfer.Log
 
         #endregion
 
-        private SyslogSenderBase _sender = null;
+        public SyslogSender Sender { get; set; }
+        public Facility Facility { get; set; }
+        public Severity Severity { get; set; }
+        public string AppName { get; set; }
+        public string ProcId { get; set; }
+        public string MsgId { get; set; }
+        public StructuredData[] StructuredDataParams { get; set; }
 
         public SyslogTransport() { }
         public SyslogTransport(Setting setting)
@@ -61,25 +67,86 @@ namespace SyslogTransfer.Log
             var info = new ServerInfo(setting.SyslogServer);
             SyslogFormat format = setting.SyslogFormat ?? SyslogFormat.RFC3164;
 
+            this.Sender = info.Protocol == SyslogProtocol.UDP ?
+                new SyslogUdpSender(info.Server, info.Port, format) :
+                setting.SyslogSslEncrypt ?
+                    new SyslogTcpSenderTLS(info.Server, info.Port, setting.SyslogSslTimeout, format) :
+                    new SyslogTcpSender(info.Server, info.Port, format);
+
+            /*
             if (info.Protocol == SyslogProtocol.UDP)
             {
                 //  UDP
-                _sender = new SyslogUdpSender(info.Server, info.Port, format);
+                Sender = new SyslogUdpSender(info.Server, info.Port, format);
             }
             else
             {
                 if (setting.SyslogSslEncrypt)
                 {
                     //  暗号化TCP
-                    _sender = new SyslogTcpSenderTLS(info.Server, info.Port, setting.SyslogSslTimeout, format);
+                    Sender = new SyslogTcpSenderTLS(info.Server, info.Port, setting.SyslogSslTimeout, format);
                 }
                 else
                 {
                     //  TCP
-                    _sender = new SyslogTcpSender(info.Server, info.Port, format);
+                    Sender = new SyslogTcpSender(info.Server, info.Port, format);
                 }
             }
+            */
         }
+
+        public void Write(string message)
+        {
+            Sender.Send(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    this.Severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
+
+        public void Write(Severity severity, string message)
+        {
+            Sender.Send(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
+
+        public void Write(Facility facility,
+            Severity severity,
+            string hostName,
+            string appname,
+            string procId,
+            string MsgId,
+            string message,
+            StructuredData[] structuredDataParams)
+        {
+            Sender.Send(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
+
 
 
 
@@ -88,9 +155,9 @@ namespace SyslogTransfer.Log
 
         public void Close()
         {
-            if (_sender != null)
+            if (Sender != null)
             {
-                _sender.Dispose();
+                Sender.Dispose();
             }
         }
 

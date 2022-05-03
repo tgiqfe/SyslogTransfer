@@ -13,9 +13,16 @@ if (save)
 
 
 var setting = Setting.Deserialize("setting.json");
+
 using (var syslog = new SyslogTransport(setting))
 {
+    syslog.Facility = Facility.LocalUse_0;
+    syslog.Severity = Severity.Informational;
+    syslog.AppName = "AppName-Tag";
+    syslog.ProcId = "Process-ID";
+    syslog.MsgId = "Message-ID";
 
+    syslog.Write("Message Content. [" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "]");
 }
 
 

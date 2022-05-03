@@ -6,17 +6,21 @@ using System.Threading.Tasks;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    internal class SyslogSenderBase : IDisposable
+    internal class SyslogSender : IDisposable
     {
         protected const int _defaultPort = 514;
         protected static readonly SyslogFormat _defaultFormat = SyslogFormat.RFC3164;
         protected const int _defaultTimeout = 1000;
 
+        public virtual string Server { get; set; }
+        public virtual int Port { get; set; }
+        public virtual SyslogFormat Format { get; set; }
+
         public virtual void Connect() { }
         public virtual void Disconnect() { }
-        public virtual void Send(SyslogMessage message) { Send(message, _defaultFormat); }
+        public virtual void Send(SyslogMessage message) { Send(message, Format); }
         public virtual void Send(SyslogMessage message, SyslogFormat format) { }
-        public virtual async Task SendAsync(SyslogMessage message) { await SendAsync(message, _defaultFormat); }
+        public virtual async Task SendAsync(SyslogMessage message) { await SendAsync(message, Format); }
         public virtual async Task SendAsync(SyslogMessage message, SyslogFormat format) { await Task.Run(() => { }); }
         public virtual void Close() { }
 

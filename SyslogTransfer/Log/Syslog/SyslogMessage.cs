@@ -10,8 +10,8 @@ namespace SyslogTransfer.Log.Syslog
     internal class SyslogMessage
     {
         public DateTime DateTime { get; set; }
-        public Facility Facility { get; set; } = Facility.UserLevelMessages;
-        public Severity Severity { get; set; } = Severity.Informational;
+        public Facility Facility { get; set; }
+        public Severity Severity { get; set; }
         public string HostName { get; set; }
         public string AppName { get; set; }
         public string ProcId { get; set; }
@@ -25,8 +25,9 @@ namespace SyslogTransfer.Log.Syslog
             Facility facility,
             Severity severity,
             string appName,
-            string message) : 
-            this(DateTime.Now, facility, severity, Environment.MachineName, appName, Process.GetCurrentProcess().Id.ToString(), "", message) { }
+            string message) :
+            this(DateTime.Now, facility, severity, Environment.MachineName, appName, Process.GetCurrentProcess().Id.ToString(), "", message)
+        { }
 
         public SyslogMessage(
             DateTime dt,

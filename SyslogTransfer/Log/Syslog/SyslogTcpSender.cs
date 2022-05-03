@@ -8,7 +8,7 @@ using System.IO;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    internal class SyslogTcpSender : SyslogSenderBase
+    internal class SyslogTcpSender : SyslogSender
     {
         private enum MessageTransfer
         {
@@ -16,10 +16,6 @@ namespace SyslogTransfer.Log.Syslog
             NonTransportFraming,
         }
 
-
-        public string Server { get; set; }
-        public int Port { get; set; }
-        public SyslogFormat Format { get; set; }
         private MessageTransfer _messageTransfer { get; set; }
 
         private TcpClient _client = null;
@@ -90,6 +86,39 @@ namespace SyslogTransfer.Log.Syslog
                 _stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
             }
         }
+
+        public override async Task SendAsync(SyslogMessage message, SyslogFormat format)
+        {
+            if (_stream == null)
+            {
+                throw new IOException("No transport stream.");
+            }
+
+            using (var ms = new MemoryStream())
+            {
+                byte[] datagram = format switch
+                {
+                    SyslogFormat.RFC3164 => SyslogSerializer.GetRfc3624(message),
+                    SyslogFormat.RFC5424 => SyslogSerializer.GetRfc5424_ascii(message),
+                    _ => null,
+                };
+
+                if (this._messageTransfer == MessageTransfer.OctetCouting)
+                {
+                    byte[] messageLength = Encoding.ASCII.GetBytes(datagram.Length.ToString());
+                    ms.Write(messageLength, 0, messageLength.Length);
+                    ms.WriteByte(32);   //  0x20 Space
+                }
+                ms.Write(datagram, 0, datagram.Length);
+
+                if (this._messageTransfer == MessageTransfer.NonTransportFraming)
+                {
+                    ms.WriteByte(10);   //  0xA LF
+                }
+                await _stream.WriteAsync(ms.GetBuffer(), 0, (int)ms.Length);
+            }
+        }
+
 
         public override void Close()
         {

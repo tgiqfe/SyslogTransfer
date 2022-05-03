@@ -7,12 +7,8 @@ using System.Net.Sockets;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    internal class SyslogUdpSender : SyslogSenderBase
+    internal class SyslogUdpSender : SyslogSender
     {
-        public string Server { get; set; }
-        public int Port { get; set; }
-        public SyslogFormat Format { get; set; }
-
         private UdpClient _client = null;
 
         public SyslogUdpSender() { }
@@ -35,7 +31,7 @@ namespace SyslogTransfer.Log.Syslog
                 SyslogFormat.RFC5424 => SyslogSerializer.GetRfc5424(message),
                 _ => null,
             };
-            //_client.Send(datagram, datagram.Length);
+            _client.Send(datagram, datagram.Length);
 
             //  デバッグ用
             Console.WriteLine(Encoding.UTF8.GetString(datagram));
