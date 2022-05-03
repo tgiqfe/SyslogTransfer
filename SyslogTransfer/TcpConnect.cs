@@ -13,8 +13,11 @@ namespace SyslogTransfer
     /// </summary>
     internal class TcpConnect
     {
-        public bool Reachable { get; set; }
-        public bool Success { get; set; }
+        private bool _reachable { get; set; }
+        private bool _success { get; set; }
+
+        public bool PingSuccess { get { return _reachable; } }
+        public bool TcpConnectSuccess { get { return _success; } }
 
         public TcpConnect(string server, bool startTest = true)
         {
@@ -35,7 +38,7 @@ namespace SyslogTransfer
         public bool Test(string server)
         {
             this.TestAsync(server).Wait();
-            return Reachable;
+            return _reachable;
         }
 
         public async Task<bool> TestAsync(string server)
@@ -48,19 +51,19 @@ namespace SyslogTransfer
                 PingReply reply = await ping.SendPingAsync(server);
                 if (reply.Status == IPStatus.Success)
                 {
-                    this.Reachable = true;
+                    this._reachable = true;
                     return true;
                 }
                 await Task.Delay(interval);
             }
-            this.Reachable = false;
+            this._reachable = false;
             return false;
         }
 
         public bool Test(string server, int port)
         {
             this.TestAsync(server, port).Wait();
-            return this.Success;
+            return this._success;
         }
 
         public async Task<bool> TestAsync(string server, int port)
@@ -78,7 +81,7 @@ namespace SyslogTransfer
                 }
                 catch { }
 
-                this.Success = client.Connected;
+                this._success = client.Connected;
                 return client.Connected;
             }
         }

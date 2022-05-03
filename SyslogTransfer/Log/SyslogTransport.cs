@@ -54,6 +54,8 @@ namespace SyslogTransfer.Log
 
         #endregion
 
+        public bool Enabled { get; set; }
+
         public SyslogSender Sender { get; set; }
         public Facility Facility { get; set; }
         public Severity Severity { get; set; }
@@ -68,22 +70,32 @@ namespace SyslogTransfer.Log
             var info = new ServerInfo(setting.SyslogServer);
             Format format = FormatMapper.ToFormat(setting.SyslogFormat);
 
-            this.Sender = info.Protocol == SyslogProtocol.UDP ?
-                new SyslogUdpSender(info.Server, info.Port, format) :
-                (setting.SyslogSslEncrypt ?? false) ?
-                    new SyslogTcpSenderTLS(
-                        info.Server,
-                        info.Port,
-                        format,
-                        setting.SyslogSslTimeout,
-                        setting.SyslogSslCertFile,
-                        setting.SyslogSslCertPassword,
-                        setting.SyslogSslCertFriendryName,
-                        setting.SyslogSslIgnoreCheck ?? false) :
-                    new SyslogTcpSender(
-                        info.Server,
-                        info.Port,
-                        format);
+            if (info.Protocol == SyslogProtocol.UDP)
+            {
+                this.Enabled = true;
+                this.Sender = new SyslogUdpSender(info.Server, info.Port, format);
+            }
+            else
+            {
+                if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
+                {
+                    this.Enabled = true;
+                    this.Sender = (setting.SyslogSslEncrypt ?? false) ?
+                        new SyslogTcpSenderTLS(
+                            info.Server,
+                            info.Port,
+                            format,
+                            setting.SyslogSslTimeout,
+                            setting.SyslogSslCertFile,
+                            setting.SyslogSslCertPassword,
+                            setting.SyslogSslCertFriendryName,
+                            setting.SyslogSslIgnoreCheck ?? false) :
+                        new SyslogTcpSender(
+                            info.Server,
+                            info.Port,
+                            format);
+                }
+            }
         }
 
         #region Write
