@@ -29,7 +29,8 @@ namespace SyslogTransfer
         /// Syslog転送時のフォーマット
         /// RFC3164、RFC5424の2種類から選択可能。無指定の場合はRFC3164
         /// </summary>
-        public SyslogFormat? SyslogFormat { get; set; }
+        //public Format? SyslogFormat { get; set; }
+        public string SyslogFormat { get; set; }
 
         /// <summary>
         /// TCP接続時、暗号化通信を有効にするかどうか
@@ -70,7 +71,7 @@ namespace SyslogTransfer
         {
             this.SyslogServer = "udp://localhost:514";
             this.SyslogFacility = "user";
-            this.SyslogFormat = SyslogTransfer.Log.Syslog.SyslogFormat.RFC3164;
+            this.SyslogFormat = Format.RFC3164.ToString();
             this.SyslogSslEncrypt = false;
             this.SyslogSslTimeout = 1000;
             this.SyslogSslCertFile = null;

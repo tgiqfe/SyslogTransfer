@@ -66,7 +66,7 @@ namespace SyslogTransfer.Log
         public SyslogTransport(Setting setting)
         {
             var info = new ServerInfo(setting.SyslogServer);
-            SyslogFormat format = setting.SyslogFormat ?? SyslogFormat.RFC3164;
+            Format format = FormatMapper.ToFormat(setting.SyslogFormat);
 
             this.Sender = info.Protocol == SyslogProtocol.UDP ?
                 new SyslogUdpSender(info.Server, info.Port, format) :
