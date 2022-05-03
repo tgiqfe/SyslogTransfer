@@ -27,16 +27,18 @@ namespace SyslogTransfer.Log.Syslog
         public int Timeout { get; set; }
         public string CertFile { get; set; }
         public string CertPassword { get; set; }
+        public string CertFriendryName { get; set; }
+        public bool IgnoreCheck { get; set; }
 
         private TcpClient _client = null;
         private SslStream _stream = null;
         private MessageTransfer _messageTransfer { get; set; }
 
         public SyslogTcpSenderTLS() { }
-        public SyslogTcpSenderTLS(string server, bool octetCouting = true) : this(server, _defaultPort, _defaultFormat, _defaultTimeout, null, null, octetCouting) { }
-        public SyslogTcpSenderTLS(string server, int port, bool octetCouting = true) : this(server, port, _defaultFormat, _defaultTimeout, null, null, octetCouting) { }
-        public SyslogTcpSenderTLS(string server, int port, SyslogFormat format, bool octetCounting = true) : this(server, port, format, _defaultTimeout, null, null, octetCounting) { }
-        public SyslogTcpSenderTLS(string server, int port, SyslogFormat format, int? timeout, string certFile, string certPassword, bool octetCouting = true)
+        public SyslogTcpSenderTLS(string server, bool octetCouting = true) : this(server, _defaultPort, _defaultFormat, _defaultTimeout, null, null, null, false, octetCouting) { }
+        public SyslogTcpSenderTLS(string server, int port, bool octetCouting = true) : this(server, port, _defaultFormat, _defaultTimeout, null, null, null, false, octetCouting) { }
+        public SyslogTcpSenderTLS(string server, int port, SyslogFormat format, bool octetCounting = true) : this(server, port, format, _defaultTimeout, null, null, null, false, octetCounting) { }
+        public SyslogTcpSenderTLS(string server, int port, SyslogFormat format, int? timeout, string certFile, string certPassword, string certFriendryName, bool ignoreCheck, bool octetCouting = true)
         {
             this.Server = server;
             this.Port = port;
@@ -44,6 +46,8 @@ namespace SyslogTransfer.Log.Syslog
             this.Timeout = timeout ?? _defaultTimeout;
             this.CertFile = certFile;
             this.CertPassword = certPassword;
+            this.CertFriendryName = certFriendryName;
+            this.IgnoreCheck = ignoreCheck;
             this._messageTransfer = octetCouting ?
                 MessageTransfer.OctetCouting :
                 MessageTransfer.NonTransportFraming;
@@ -78,35 +82,55 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-
         private X509Certificate2Collection GetCollection()
         {
             var collection = new X509Certificate2Collection();
-            //X509Certificate2 cert = new X509Certificate2(this.CertFile, this.CertPassword);
-            //collection.Add(cert);
-
-
-            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            store.Open(OpenFlags.ReadOnly);
-            //collection.AddRange(store.Certificates);
-
-            foreach (var cert in store.Certificates)
+            if (!string.IsNullOrEmpty(this.CertFile) && !string.IsNullOrEmpty(this.CertPassword) && File.Exists(this.CertFile))
             {
-                Console.WriteLine(cert.FriendlyName);
-                if (cert.FriendlyName == "syslog")
+                collection.Add(new X509Certificate2(this.CertFile, this.CertPassword));
+            }
+            else if (!string.IsNullOrEmpty(this.CertFriendryName))
+            {
+                var myCert = new X509Store(StoreName.My, StoreLocation.CurrentUser, OpenFlags.ReadOnly).Certificates.
+                    FirstOrDefault(x => x.FriendlyName == this.CertFriendryName);
+                if (myCert == null)
                 {
-                    //collection.Add(cert);
-                    Console.WriteLine(cert.SubjectName.Name);
-
+                    new X509Store(StoreName.My, StoreLocation.LocalMachine, OpenFlags.ReadOnly).Certificates.
+                        FirstOrDefault(x => x.FriendlyName == this.CertFriendryName);
+                }
+                if (myCert != null)
+                {
+                    collection.Add(myCert);
                 }
             }
 
             return collection;
         }
 
+        private bool RemoteCertificateValidationCallback(Object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            //  デバッグ用
+            //Debug_CertPrint(certificate);
 
-        //証明書の内容を表示するメソッド
-        private static void PrintCertificate(X509Certificate certificate)
+            if (this.IgnoreCheck || sslPolicyErrors == SslPolicyErrors.None)
+            {
+                //  Successful verification of server certificate.
+                return true;
+            }
+            else
+            {
+                //  ChainStatus returned a non-empty array.
+                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors) { }
+                //  Certificate names do not match.
+                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) == SslPolicyErrors.RemoteCertificateNameMismatch) { }
+                //  Certificate not available.
+                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNotAvailable) == SslPolicyErrors.RemoteCertificateNotAvailable) { }
+
+                return false;
+            }
+        }
+
+        private void Debug_CertPrint(X509Certificate certificate)
         {
             Console.WriteLine("===========================================");
             Console.WriteLine("Subject={0}", certificate.Subject);
@@ -119,78 +143,6 @@ namespace SyslogTransfer.Log.Syslog
             Console.WriteLine("SerialNumber={0}", certificate.GetSerialNumberString());
             Console.WriteLine("===========================================");
         }
-
-        //サーバー証明書を検証するためのコールバックメソッド
-        private static Boolean RemoteCertificateValidationCallback(Object sender,
-            X509Certificate certificate,
-            X509Chain chain,
-            SslPolicyErrors sslPolicyErrors)
-        {
-            PrintCertificate(certificate);
-
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                //Console.WriteLine("Successful verification of server certificate.");
-                return true;
-            }
-            else
-            {
-                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) == SslPolicyErrors.RemoteCertificateChainErrors)
-                {
-                    //Console.WriteLine("ChainStatus returned a non-empty array.");
-                }
-
-                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) == SslPolicyErrors.RemoteCertificateNameMismatch)
-                {
-                    //Console.WriteLine("Certificate names do not match.");
-                }
-
-                if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateNotAvailable) == SslPolicyErrors.RemoteCertificateNotAvailable)
-                {
-                    //Console.WriteLine("Certificate not available.");
-                }
-
-                //検証失敗とする
-                return false;
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /*
-        private bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            if (sslPolicyErrors == SslPolicyErrors.None || (IgnoreTLSChainErrors && sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors))
-                return true;
-
-            CertificateErrorHandler(String.Format("Certificate error: {0}", sslPolicyErrors));
-            return false;
-        }
-
-        public Boolean IgnoreTLSChainErrors { get; private set; }
-        public static Action<string> CertificateErrorHandler = err => { };
-        */
-
 
         public override void Disconnect()
         {
