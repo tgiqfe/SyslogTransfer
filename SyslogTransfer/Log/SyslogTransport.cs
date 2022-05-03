@@ -70,122 +70,93 @@ namespace SyslogTransfer.Log
             this.Sender = info.Protocol == SyslogProtocol.UDP ?
                 new SyslogUdpSender(info.Server, info.Port, format) :
                 setting.SyslogSslEncrypt ?
-                    new SyslogTcpSenderTLS(info.Server, info.Port, setting.SyslogSslTimeout, format) :
+                    new SyslogTcpSenderTLS(info.Server, info.Port, format, setting.SyslogSslTimeout, setting.SyslogSslCertFile, setting.SyslogSslCertPassword) :
                     new SyslogTcpSender(info.Server, info.Port, format);
-
-            /*
-            if (info.Protocol == SyslogProtocol.UDP)
-            {
-                //  UDP
-                Sender = new SyslogUdpSender(info.Server, info.Port, format);
-            }
-            else
-            {
-                if (setting.SyslogSslEncrypt)
-                {
-                    //  暗号化TCP
-                    Sender = new SyslogTcpSenderTLS(info.Server, info.Port, setting.SyslogSslTimeout, format);
-                }
-                else
-                {
-                    //  TCP
-                    Sender = new SyslogTcpSender(info.Server, info.Port, format);
-                }
-            }
-            */
         }
+
+        #region Write
 
         public void Write(string message)
         {
-            Sender.Send(
-                new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
-                    this.Severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
-                    message,
-                    this.StructuredDataParams));
+            Write(DateTime.Now, this.Facility, this.Severity, Environment.MachineName, this.AppName, this.ProcId, this.MsgId, message, this.StructuredDataParams);
         }
 
         public void Write(Severity severity, string message)
         {
-            Sender.Send(
-                new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
-                    severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
-                    message,
-                    this.StructuredDataParams));
+            Write(DateTime.Now, this.Facility, severity, Environment.MachineName, this.AppName, this.ProcId, this.MsgId, message, this.StructuredDataParams);
         }
 
-        public void Write(Facility facility, Severity severity, string hostName, string appname, string procId, string MsgId, string message, StructuredData[] structuredDataParams)
+        public void Write(DateTime dt, Facility facility, Severity severity, string hostName, string appName, string procId, string msgId, string message, StructuredData[] structuredDataParams)
         {
             Sender.Send(
                 new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
+                    dt,
+                    facility,
                     severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
+                    hostName,
+                    appName,
+                    procId,
+                    msgId,
                     message,
-                    this.StructuredDataParams));
+                    structuredDataParams));
         }
 
-        public async void WriteAsync(string message)
+        public void Write(DateTime dt, Facility facility, LogLevel level, string hostName, string appName, string procId, string msgId, string message, StructuredData[] structuredDataParams)
+        {
+            Sender.Send(
+                new SyslogMessage(
+                    dt,
+                    facility,
+                    LogLevelMapper.ToSeverity(level),
+                    hostName,
+                    appName,
+                    procId,
+                    msgId,
+                    message,
+                    structuredDataParams));
+        }
+
+        public async Task WriteAsync(string message)
+        {
+            await WriteAsync(DateTime.Now, this.Facility, this.Severity, Environment.MachineName, this.AppName, this.ProcId, this.MsgId, message, this.StructuredDataParams);
+        }
+
+        public async Task WriteAsync(Severity severity, string message)
+        {
+            await WriteAsync(DateTime.Now, this.Facility, severity, Environment.MachineName, this.AppName, this.ProcId, this.MsgId, message, this.StructuredDataParams);
+        }
+
+        public async Task WriteAsync(DateTime dt, Facility facility, Severity severity, string hostName, string appName, string procId, string msgId, string message, StructuredData[] structuredDataParams)
         {
             await Sender.SendAsync(
                 new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
-                    this.Severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
+                    dt,
+                    facility,
+                    severity,
+                    hostName,
+                    appName,
+                    procId,
+                    msgId,
                     message,
-                    this.StructuredDataParams));
+                    structuredDataParams));
         }
 
-        public async void WriteAsync(Severity severity, string message)
+        public async Task WriteAsync(DateTime dt, Facility facility, LogLevel level, string hostName, string appName, string procId, string msgId, string message, StructuredData[] structuredDataParams)
         {
             await Sender.SendAsync(
                 new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
-                    severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
+                    dt,
+                    facility,
+                    LogLevelMapper.ToSeverity(level),
+                    hostName,
+                    appName,
+                    procId,
+                    msgId,
                     message,
-                    this.StructuredDataParams));
+                    structuredDataParams));
         }
 
-        public async void WriteAsync(Facility facility, Severity severity, string hostName, string appname, string procId, string MsgId, string message, StructuredData[] structuredDataParams)
-        {
-            await Sender.SendAsync(
-                new SyslogMessage(
-                    DateTime.Now,
-                    this.Facility,
-                    severity,
-                    Environment.MachineName,
-                    this.AppName,
-                    this.ProcId,
-                    this.MsgId,
-                    message,
-                    this.StructuredDataParams));
-        }
-
-
+        #endregion
 
         public void Close()
         {

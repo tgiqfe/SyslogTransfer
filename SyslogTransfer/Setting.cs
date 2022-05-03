@@ -14,7 +14,9 @@ namespace SyslogTransfer
     {
         public string SyslogServer { get; set; }
         public bool SyslogSslEncrypt { get; set; }
-        public int SyslogSslTimeout { get; set; }
+        public int? SyslogSslTimeout { get; set; }
+        public string SyslogSslCertFile { get; set; }
+        public string SyslogSslCertPassword { get; set; }
         public SyslogFormat? SyslogFormat { get; set; }
 
         public void Init()
@@ -22,6 +24,8 @@ namespace SyslogTransfer
             this.SyslogServer = "udp://localhost:514";
             this.SyslogSslEncrypt = false;
             this.SyslogSslTimeout = 1000;
+            this.SyslogSslCertFile = null;
+            this.SyslogSslCertPassword = null;
             this.SyslogFormat = SyslogTransfer.Log.Syslog.SyslogFormat.RFC3164;
         }
 

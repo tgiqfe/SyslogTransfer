@@ -73,7 +73,7 @@ namespace SyslogTransfer.Log.Syslog
 
                 if (this._messageTransfer == MessageTransfer.OctetCouting)
                 {
-                    byte[] messageLength = Encoding.ASCII.GetBytes(datagram.Length.ToString());
+                    byte[] messageLength = Encoding.UTF8.GetBytes(datagram.Length.ToString());
                     ms.Write(messageLength, 0, messageLength.Length);
                     ms.WriteByte(32);   //  0x20 Space
                 }
@@ -84,11 +84,10 @@ namespace SyslogTransfer.Log.Syslog
                     ms.WriteByte(10);   //  0xA LF
                 }
 
-
-                _stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
+                //_stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
 
                 //  デバッグ用
-                //Console.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length));
+                Console.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length));
             }
         }
 
@@ -110,7 +109,7 @@ namespace SyslogTransfer.Log.Syslog
 
                 if (this._messageTransfer == MessageTransfer.OctetCouting)
                 {
-                    byte[] messageLength = Encoding.ASCII.GetBytes(datagram.Length.ToString());
+                    byte[] messageLength = Encoding.UTF8.GetBytes(datagram.Length.ToString());
                     ms.Write(messageLength, 0, messageLength.Length);
                     ms.WriteByte(32);   //  0x20 Space
                 }

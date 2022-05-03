@@ -22,6 +22,7 @@ using (var syslog = new SyslogTransport(setting))
     syslog.ProcId = "Process-ID";
     syslog.MsgId = "Message-ID";
 
+    //syslog.WriteAsync("Message Content. [" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "]").ConfigureAwait(false);
     syslog.Write("Message Content. [" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "]");
 }
 
