@@ -51,7 +51,7 @@ namespace SyslogTransfer.Log.Syslog
             Connect();
         }
 
-        public override void Connect()
+        public void Connect()
         {
             try
             {
@@ -140,7 +140,7 @@ namespace SyslogTransfer.Log.Syslog
             Console.WriteLine("===========================================");
         }
 
-        public override void Disconnect()
+        public void Disconnect()
         {
             if (_stream != null) { _stream.Dispose(); }
             if (_client != null) { _client.Dispose(); }

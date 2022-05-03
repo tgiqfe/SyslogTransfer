@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SyslogTransfer.Log.Syslog;
 using System.Text.RegularExpressions;
+using System.Net.Sockets;
 
 namespace SyslogTransfer.Log
 {

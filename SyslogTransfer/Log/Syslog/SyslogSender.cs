@@ -16,8 +16,6 @@ namespace SyslogTransfer.Log.Syslog
         public virtual int Port { get; set; }
         public virtual SyslogFormat Format { get; set; }
 
-        public virtual void Connect() { }
-        public virtual void Disconnect() { }
         public virtual void Send(SyslogMessage message) { Send(message, Format); }
         public virtual void Send(SyslogMessage message, SyslogFormat format) { }
         public virtual async Task SendAsync(SyslogMessage message) { await SendAsync(message, Format); }
