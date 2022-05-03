@@ -70,9 +70,20 @@ namespace SyslogTransfer.Log
 
             this.Sender = info.Protocol == SyslogProtocol.UDP ?
                 new SyslogUdpSender(info.Server, info.Port, format) :
-                setting.SyslogSslEncrypt ?
-                    new SyslogTcpSenderTLS(info.Server, info.Port, format, setting.SyslogSslTimeout, setting.SyslogSslCertFile, setting.SyslogSslCertPassword, setting.SyslogSslCertFriendryName, setting.SyslogSslIgnoreCheck) :
-                    new SyslogTcpSender(info.Server, info.Port, format);
+                (setting.SyslogSslEncrypt ?? false) ?
+                    new SyslogTcpSenderTLS(
+                        info.Server,
+                        info.Port,
+                        format,
+                        setting.SyslogSslTimeout,
+                        setting.SyslogSslCertFile,
+                        setting.SyslogSslCertPassword,
+                        setting.SyslogSslCertFriendryName,
+                        setting.SyslogSslIgnoreCheck ?? false) :
+                    new SyslogTcpSender(
+                        info.Server,
+                        info.Port,
+                        format);
         }
 
         #region Write
