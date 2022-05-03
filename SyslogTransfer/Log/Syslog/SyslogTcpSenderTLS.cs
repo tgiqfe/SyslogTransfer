@@ -15,7 +15,7 @@ namespace SyslogTransfer.Log.Syslog
     /// 暗号化のみ。
     /// クライアント認証無し
     /// </summary>
-    internal class SyslogTcpSenderTLS : IDisposable
+    internal class SyslogTcpSenderTLS : SyslogSenderBase
     {
         private enum MessageTransfer
         {
@@ -26,27 +26,30 @@ namespace SyslogTransfer.Log.Syslog
 
         public string Server { get; set; }
         public int Port { get; set; }
+        public int Timeout { get; set; }
         public SyslogFormat Format { get; set; }
 
-        private static int _defaultPort = 514;
-        private static readonly SyslogFormat _defaultFormat = SyslogFormat.RFC3164;
 
 
 
-
-        private string _server = null;
-        private int _port = 514;
-        private int _timeout = 0;
+        //private string _server = null;
+        //private int _port = 514;
+        //private int _timeout = 0;
         private TcpClient _client = null;
         private SslStream _stream = null;
 
         private MessageTransfer _messageTransfer { get; set; }
 
-        public SyslogTcpSenderTLS(string server, int port, int timeout, bool octetCouting = true)
+        public SyslogTcpSenderTLS() { }
+        public SyslogTcpSenderTLS(string server, bool octetCouting = true) : this(server, _defaultPort, _defaultPort, _defaultFormat, octetCouting) { }
+        public SyslogTcpSenderTLS(string server, int port , bool octetCouting = true) : this(server, port, _defaultTimeout, _defaultFormat, octetCouting) { }
+        public SyslogTcpSenderTLS(string server, int port, int timeout, bool octetCouting = true) : this(server, port, timeout, _defaultFormat, octetCouting) { }
+        public SyslogTcpSenderTLS(string server, int port, int timeout, SyslogFormat format, bool octetCouting = true)
         {
-            this._server = server;
-            this._port = port;
-            this._timeout = timeout;
+            this.Server = server;
+            this.Port = port;
+            this.Timeout = timeout;
+            this.Format = format;
             this._messageTransfer = octetCouting ?
                 MessageTransfer.OctetCouting :
                 MessageTransfer.NonTransportFraming;
@@ -54,18 +57,19 @@ namespace SyslogTransfer.Log.Syslog
             Connect();
         }
 
-        public void Connect()
+
+        public override void Connect()
         {
             try
             {
-                _client = new TcpClient(_server, _port);
+                _client = new TcpClient(Server, Port);
                 _stream = new SslStream(_client.GetStream(), false, delegate { return true; })
                 {
-                    ReadTimeout = _timeout,
-                    WriteTimeout = _timeout
+                    ReadTimeout = Timeout,
+                    WriteTimeout = Timeout
                 };
                 _stream.AuthenticateAsClient(
-                    _server,
+                    Server,
                     null,
                     SslProtocols.Tls12 | SslProtocols.Tls13,
                     false);
@@ -80,13 +84,13 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (_stream != null) { _stream.Dispose(); }
             if (_client != null) { _client.Dispose(); }
         }
 
-        public void Send(SyslogMessage message, SyslogFormat format)
+        public override void Send(SyslogMessage message, SyslogFormat format)
         {
             if (_stream == null)
             {
@@ -120,33 +124,9 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-        public void Close()
+        public override void Close()
         {
             Disconnect();
         }
-
-        #region Dispose
-
-        private bool disposedValue;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Close();
-                }
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }

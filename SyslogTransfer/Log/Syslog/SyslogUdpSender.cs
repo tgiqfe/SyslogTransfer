@@ -7,14 +7,11 @@ using System.Net.Sockets;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    internal class SyslogUdpSender : IDisposable
+    internal class SyslogUdpSender : SyslogSenderBase
     {
         public string Server { get; set; }
         public int Port { get; set; }
         public SyslogFormat Format { get; set; }
-
-        private static int _defaultPort = 514;
-        private static readonly SyslogFormat _defaultFormat = SyslogFormat.RFC3164;
 
         private UdpClient _client = null;
 
@@ -28,12 +25,7 @@ namespace SyslogTransfer.Log.Syslog
             this.Format = format;
         }
 
-        public void Send(SyslogMessage message)
-        {
-            Send(message, _defaultFormat);
-        }
-
-        public void Send(SyslogMessage message, SyslogFormat format)
+        public override void Send(SyslogMessage message, SyslogFormat format)
         {
             _client ??= new UdpClient(Server, Port);
 
@@ -49,36 +41,28 @@ namespace SyslogTransfer.Log.Syslog
             Console.WriteLine(Encoding.UTF8.GetString(datagram));
         }
 
-        public void Close()
+        public override async Task SendAsync(SyslogMessage message, SyslogFormat format)
+        {
+            _client ??= new UdpClient(Server, Port);
+
+            byte[] datagram = format switch
+            {
+                SyslogFormat.RFC3164 => SyslogSerializer.GetRfc3624(message),
+                SyslogFormat.RFC5424 => SyslogSerializer.GetRfc5424(message),
+                _ => null,
+            };
+            await _client.SendAsync(datagram, datagram.Length);
+
+            //  デバッグ用
+            Console.WriteLine(Encoding.UTF8.GetString(datagram));
+        }
+
+        public override void Close()
         {
             if (_client != null)
             {
                 _client.Dispose();
             }
         }
-
-        #region Dispose
-
-        private bool disposedValue;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Close();
-                }
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }

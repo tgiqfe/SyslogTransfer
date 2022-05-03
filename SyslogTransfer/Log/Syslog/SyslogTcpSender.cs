@@ -8,7 +8,7 @@ using System.IO;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    internal class SyslogTcpSender : IDisposable
+    internal class SyslogTcpSender : SyslogSenderBase
     {
         private enum MessageTransfer
         {
@@ -20,25 +20,19 @@ namespace SyslogTransfer.Log.Syslog
         public string Server { get; set; }
         public int Port { get; set; }
         public SyslogFormat Format { get; set; }
+        private MessageTransfer _messageTransfer { get; set; }
 
-        private static int _defaultPort = 514;
-        private static readonly SyslogFormat _defaultFormat = SyslogFormat.RFC3164;
-
-
-
-        private string _server = null;
-        private int _port = 514;
         private TcpClient _client = null;
         private NetworkStream _stream = null;
 
-        private MessageTransfer _messageTransfer { get; set; }
-
         public SyslogTcpSender() { }
-        public SyslogTcpSender(string server, bool octedCounting = true) : this(server, 514, octedCounting) { }
-        public SyslogTcpSender(string server, int port, bool octetCounting = true)
+        public SyslogTcpSender(string server, bool octedCounting = true) : this(server, _defaultPort, _defaultFormat, octedCounting) { }
+        public SyslogTcpSender(string server, int port, bool octetCounting = true) : this(server, port, _defaultFormat, octetCounting) { }
+        public SyslogTcpSender(string server, int port, SyslogFormat format, bool octetCounting = true)
         {
-            this._server = server;
-            this._port = port;
+            this.Server = server;
+            this.Port = port;
+            this.Format = format;
             this._messageTransfer = octetCounting ?
                 MessageTransfer.OctetCouting :
                 MessageTransfer.NonTransportFraming;
@@ -46,11 +40,11 @@ namespace SyslogTransfer.Log.Syslog
             Connect();
         }
 
-        public void Connect()
+        public override void Connect()
         {
             try
             {
-                _client = new TcpClient(_server, _port);
+                _client = new TcpClient(Server, Port);
                 _stream = _client.GetStream();
             }
             catch
@@ -59,13 +53,13 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (_stream != null) { _stream.Dispose(); }
             if (_client != null) { _client.Dispose(); }
         }
 
-        public void Send(SyslogMessage message, SyslogFormat format)
+        public override void Send(SyslogMessage message, SyslogFormat format)
         {
             if (_stream == null)
             {
@@ -97,33 +91,9 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-        public void Close()
+        public override void Close()
         {
             Disconnect();
         }
-
-        #region Dispose
-
-        private bool disposedValue;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Close();
-                }
-                disposedValue = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }
