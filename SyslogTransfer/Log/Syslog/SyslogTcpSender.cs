@@ -83,7 +83,12 @@ namespace SyslogTransfer.Log.Syslog
                 {
                     ms.WriteByte(10);   //  0xA LF
                 }
+
+
                 _stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
+
+                //  デバッグ用
+                //Console.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length));
             }
         }
 

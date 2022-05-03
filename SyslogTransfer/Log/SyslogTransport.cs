@@ -125,14 +125,7 @@ namespace SyslogTransfer.Log
                     this.StructuredDataParams));
         }
 
-        public void Write(Facility facility,
-            Severity severity,
-            string hostName,
-            string appname,
-            string procId,
-            string MsgId,
-            string message,
-            StructuredData[] structuredDataParams)
+        public void Write(Facility facility, Severity severity, string hostName, string appname, string procId, string MsgId, string message, StructuredData[] structuredDataParams)
         {
             Sender.Send(
                 new SyslogMessage(
@@ -147,9 +140,50 @@ namespace SyslogTransfer.Log
                     this.StructuredDataParams));
         }
 
+        public async void WriteAsync(string message)
+        {
+            await Sender.SendAsync(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    this.Severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
 
+        public async void WriteAsync(Severity severity, string message)
+        {
+            await Sender.SendAsync(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
 
-
+        public async void WriteAsync(Facility facility, Severity severity, string hostName, string appname, string procId, string MsgId, string message, StructuredData[] structuredDataParams)
+        {
+            await Sender.SendAsync(
+                new SyslogMessage(
+                    DateTime.Now,
+                    this.Facility,
+                    severity,
+                    Environment.MachineName,
+                    this.AppName,
+                    this.ProcId,
+                    this.MsgId,
+                    message,
+                    this.StructuredDataParams));
+        }
 
 
 
