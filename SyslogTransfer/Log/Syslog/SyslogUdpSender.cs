@@ -34,7 +34,7 @@ namespace SyslogTransfer.Log.Syslog
             _client.Send(datagram, datagram.Length);
 
             //  デバッグ用
-            Console.WriteLine(Encoding.UTF8.GetString(datagram));
+            //Console.WriteLine(Encoding.UTF8.GetString(datagram));
         }
 
         public override async Task SendAsync(SyslogMessage message, SyslogFormat format)
@@ -50,7 +50,7 @@ namespace SyslogTransfer.Log.Syslog
             await _client.SendAsync(datagram, datagram.Length);
 
             //  デバッグ用
-            Console.WriteLine(Encoding.UTF8.GetString(datagram));
+            //Console.WriteLine(Encoding.UTF8.GetString(datagram));
         }
 
         public override void Close()

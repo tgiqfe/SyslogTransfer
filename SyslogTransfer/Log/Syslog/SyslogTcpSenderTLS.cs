@@ -12,10 +12,6 @@ using System.Threading;
 
 namespace SyslogTransfer.Log.Syslog
 {
-    /// <summary>
-    /// 暗号化のみ。
-    /// クライアント認証無し
-    /// </summary>
     internal class SyslogTcpSenderTLS : SyslogSender
     {
         private enum MessageTransfer
@@ -152,9 +148,10 @@ namespace SyslogTransfer.Log.Syslog
 
         public override void Send(SyslogMessage message, SyslogFormat format)
         {
-            if (_stream == null)
+            if (_stream == null || !_stream.CanWrite)
             {
-                throw new IOException("No transport stream.");
+                //  No transport stream.
+                return;
             }
 
             using (var ms = new MemoryStream())

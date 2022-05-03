@@ -21,6 +21,11 @@ namespace SyslogTransfer
         public string SyslogServer { get; set; }
 
         /// <summary>
+        /// アプリケーション内で送信するSyslogファシリティ
+        /// </summary>
+        public string SyslogFacility { get; set; }
+
+        /// <summary>
         /// Syslog転送時のフォーマット
         /// RFC3164、RFC5424の2種類から選択可能。無指定の場合はRFC3164
         /// </summary>
@@ -64,12 +69,14 @@ namespace SyslogTransfer
         public void Init()
         {
             this.SyslogServer = "udp://localhost:514";
+            this.SyslogFacility = "user";
+            this.SyslogFormat = SyslogTransfer.Log.Syslog.SyslogFormat.RFC3164;
             this.SyslogSslEncrypt = false;
             this.SyslogSslTimeout = 1000;
             this.SyslogSslCertFile = null;
-            this.SyslogSslCertPassword = "syslog";
-            this.SyslogSslCertFriendryName = null;
-            this.SyslogFormat = SyslogTransfer.Log.Syslog.SyslogFormat.RFC3164;
+            this.SyslogSslCertPassword = null;
+            this.SyslogSslCertFriendryName = "syslog";
+            this.SyslogSslIgnoreCheck = false;
         }
 
         public static Setting Deserialize(string filePath)

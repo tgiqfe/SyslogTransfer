@@ -16,7 +16,7 @@ var setting = Setting.Deserialize("setting.json");
 
 using (var syslog = new SyslogTransport(setting))
 {
-    syslog.Facility = Facility.LocalUse_0;
+    syslog.Facility = FacilityMapper.ToFacility(setting.SyslogFacility);
     syslog.Severity = Severity.Informational;
     syslog.AppName = "AppName-Tag";
     syslog.ProcId = "Process-ID";
