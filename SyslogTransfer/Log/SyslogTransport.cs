@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SyslogTransfer.Lib.Syslog;
 using SyslogTransfer.Lib;
 using System.Text.RegularExpressions;
+using System.Net.Sockets;
 
 namespace SyslogTransfer.Log
 {
@@ -97,6 +98,11 @@ namespace SyslogTransfer.Log
                     structuredDataParams));
         }
 
+        public void Write(LogLevel level, string msgId, string message)
+        {
+            Write(DateTime.Now, this.Facility, LogLevelMapper.ToSeverity(level), Environment.MachineName, this.AppName, this.ProcId, msgId, message, this.StructuredDataParams);
+        }
+
         public async Task WriteAsync(string message)
         {
             await WriteAsync(DateTime.Now, this.Facility, this.Severity, Environment.MachineName, this.AppName, this.ProcId, this.MsgId, message, this.StructuredDataParams);
@@ -135,6 +141,11 @@ namespace SyslogTransfer.Log
                     msgId,
                     message,
                     structuredDataParams));
+        }
+
+        public async Task WriteAsync(LogLevel level, string msgId, string message)
+        {
+            await WriteAsync(DateTime.Now, this.Facility, LogLevelMapper.ToSeverity(level), Environment.MachineName, this.AppName, this.ProcId, msgId, message, this.StructuredDataParams);
         }
 
         #endregion

@@ -16,14 +16,14 @@ var setting = Setting.Deserialize("setting.json");
 
 using (var syslog = new SyslogTransport(setting))
 {
-    syslog.Facility = Facility.LocalUse_0;
+    syslog.Facility = FacilityMapper.ToFacility(setting.Syslog.Facility);
     syslog.Severity = Severity.Informational;
     syslog.AppName = "AppName-Tag";
     syslog.ProcId = "Process-ID";
     syslog.MsgId = "Message-ID";
 
     //syslog.WriteAsync("Message Content. [" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "]").ConfigureAwait(false);
-    syslog.Write("Message Content. [" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "]");
+    syslog.Write("MessageContent. to " + setting.Syslog.Server);
 }
 
 
