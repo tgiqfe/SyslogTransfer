@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace SyslogTransfer.Log.Syslog
+namespace SyslogTransfer.Lib.Syslog
 {
     internal class SyslogMessage
     {

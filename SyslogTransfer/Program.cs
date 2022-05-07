@@ -1,6 +1,6 @@
 ﻿using SyslogTransfer;
 using SyslogTransfer.Log;
-using SyslogTransfer.Log.Syslog;
+using SyslogTransfer.Lib.Syslog;
 
 bool save = false;
 if (save)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SyslogTransfer.Log.Syslog
+namespace SyslogTransfer.Lib.Syslog
 {
     /// <summary>
     /// RFC5424用 構造化データ(Strctured-Data)

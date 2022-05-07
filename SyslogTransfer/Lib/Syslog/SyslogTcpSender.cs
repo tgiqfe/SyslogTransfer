@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.IO;
 
-namespace SyslogTransfer.Log.Syslog
+namespace SyslogTransfer.Lib.Syslog
 {
     internal class SyslogTcpSender : SyslogSender
     {
@@ -24,7 +24,7 @@ namespace SyslogTransfer.Log.Syslog
         public SyslogTcpSender() { }
         public SyslogTcpSender(string server, bool octedCounting = true) : this(server, _defaultPort, _defaultFormat, octedCounting) { }
         public SyslogTcpSender(string server, int port, bool octetCounting = true) : this(server, port, _defaultFormat, octetCounting) { }
-        public SyslogTcpSender(string server, int port, SyslogFormat format, bool octetCounting = true)
+        public SyslogTcpSender(string server, int port, Format format, bool octetCounting = true)
         {
             this.Server = server;
             this.Port = port;
@@ -36,7 +36,7 @@ namespace SyslogTransfer.Log.Syslog
             Connect();
         }
 
-        public override void Connect()
+        public void Connect()
         {
             try
             {
@@ -49,13 +49,13 @@ namespace SyslogTransfer.Log.Syslog
             }
         }
 
-        public override void Disconnect()
+        public void Disconnect()
         {
             if (_stream != null) { _stream.Dispose(); }
             if (_client != null) { _client.Dispose(); }
         }
 
-        public override void Send(SyslogMessage message, SyslogFormat format)
+        public override void Send(SyslogMessage message, Format format)
         {
             if (_stream == null)
             {
@@ -66,8 +66,8 @@ namespace SyslogTransfer.Log.Syslog
             {
                 byte[] datagram = format switch
                 {
-                    SyslogFormat.RFC3164 => SyslogSerializer.GetRfc3624(message),
-                    SyslogFormat.RFC5424 => SyslogSerializer.GetRfc5424_ascii(message),
+                    Format.RFC3164 => SyslogSerializer.GetRfc3624(message),
+                    Format.RFC5424 => SyslogSerializer.GetRfc5424_ascii(message),
                     _ => null,
                 };
 
@@ -84,14 +84,14 @@ namespace SyslogTransfer.Log.Syslog
                     ms.WriteByte(10);   //  0xA LF
                 }
 
-                //_stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
+                _stream.Write(ms.GetBuffer(), 0, (int)ms.Length);
 
                 //  デバッグ用
-                Console.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length));
+                //Console.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length));
             }
         }
 
-        public override async Task SendAsync(SyslogMessage message, SyslogFormat format)
+        public override async Task SendAsync(SyslogMessage message, Format format)
         {
             if (_stream == null)
             {
@@ -102,8 +102,8 @@ namespace SyslogTransfer.Log.Syslog
             {
                 byte[] datagram = format switch
                 {
-                    SyslogFormat.RFC3164 => SyslogSerializer.GetRfc3624(message),
-                    SyslogFormat.RFC5424 => SyslogSerializer.GetRfc5424_ascii(message),
+                    Format.RFC3164 => SyslogSerializer.GetRfc3624(message),
+                    Format.RFC5424 => SyslogSerializer.GetRfc5424_ascii(message),
                     _ => null,
                 };
 
@@ -122,7 +122,6 @@ namespace SyslogTransfer.Log.Syslog
                 await _stream.WriteAsync(ms.GetBuffer(), 0, (int)ms.Length);
             }
         }
-
 
         public override void Close()
         {

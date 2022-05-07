@@ -3,55 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SyslogTransfer.Log.Syslog;
+using SyslogTransfer.Lib.Syslog;
+using SyslogTransfer.Lib;
 using System.Text.RegularExpressions;
 
 namespace SyslogTransfer.Log
 {
     internal class SyslogTransport : IDisposable
     {
-        #region Server info (ip,port,protocol)
-
-        private class ServerInfo
-        {
-            public string Server { get; set; }
-            public int Port { get; set; }
-            public SyslogProtocol Protocol { get; set; }
-
-            public ServerInfo() { }
-            public ServerInfo(string syslogServer)
-            {
-                string tempServer = syslogServer;
-                string tempPort = "514";
-
-                Match match;
-                if ((match = Regex.Match(tempServer, "^.+(?=://)")).Success)
-                {
-                    this.Protocol = match.Value switch
-                    {
-                        "tcp" => SyslogProtocol.TCP,
-                        "udp" => SyslogProtocol.UDP,
-                        _ => SyslogProtocol.UDP,
-                    };
-                    tempServer = tempServer.Substring(tempServer.IndexOf("://") + 3);
-                }
-                else
-                {
-                    this.Protocol = SyslogProtocol.UDP;
-                }
-
-                if ((match = Regex.Match(tempServer, @"(?<=:)\d+")).Success)
-                {
-                    tempPort = match.Value;
-                    tempServer = tempServer.Substring(0, tempServer.IndexOf(":"));
-                }
-                this.Port = int.Parse(tempPort);
-
-                this.Server = tempServer;
-            }
-        }
-
-        #endregion
+        public bool Enabled { get; set; }
 
         public SyslogSender Sender { get; set; }
         public Facility Facility { get; set; }
@@ -64,14 +24,35 @@ namespace SyslogTransfer.Log
         public SyslogTransport() { }
         public SyslogTransport(Setting setting)
         {
-            var info = new ServerInfo(setting.SyslogServer);
-            SyslogFormat format = setting.SyslogFormat ?? SyslogFormat.RFC3164;
+            var info = new ServerInfo(setting.Syslog.Server, defaultPort: 514, defaultProtocol: "udp");
+            Format format = FormatMapper.ToFormat(setting.Syslog.Format);
 
-            this.Sender = info.Protocol == SyslogProtocol.UDP ?
-                new SyslogUdpSender(info.Server, info.Port, format) :
-                setting.SyslogSslEncrypt ?
-                    new SyslogTcpSenderTLS(info.Server, info.Port, format, setting.SyslogSslTimeout, setting.SyslogSslCertFile, setting.SyslogSslCertPassword) :
-                    new SyslogTcpSender(info.Server, info.Port, format);
+            if (info.Protocol == "udp")
+            {
+                this.Enabled = true;
+                this.Sender = new SyslogUdpSender(info.Server, info.Port, format);
+            }
+            else
+            {
+                if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
+                {
+                    this.Enabled = true;
+                    this.Sender = (setting.Syslog.SslEncrypt ?? false) ?
+                        new SyslogTcpSenderTLS(
+                            info.Server,
+                            info.Port,
+                            format,
+                            setting.Syslog.SslTimeout,
+                            setting.Syslog.SslCertFile,
+                            setting.Syslog.SslCertPassword,
+                            setting.Syslog.SslCertFriendryName,
+                            setting.Syslog.SslIgnoreCheck ?? false) :
+                        new SyslogTcpSender(
+                            info.Server,
+                            info.Port,
+                            format);
+                }
+            }
         }
 
         #region Write

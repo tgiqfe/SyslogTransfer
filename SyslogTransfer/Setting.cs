@@ -6,27 +6,60 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
-using SyslogTransfer.Log.Syslog;
+using SyslogTransfer.Lib.Syslog;
 
 namespace SyslogTransfer
 {
     internal class Setting
     {
-        public string SyslogServer { get; set; }
-        public bool SyslogSslEncrypt { get; set; }
-        public int? SyslogSslTimeout { get; set; }
-        public string SyslogSslCertFile { get; set; }
-        public string SyslogSslCertPassword { get; set; }
-        public SyslogFormat? SyslogFormat { get; set; }
+        public ParamSyslog Syslog { get; set; }
+
+        public class ParamSyslog
+        {
+            /// <summary>
+            /// ログ転送先サーバ(Syslog)のサーバ
+            /// 記述例⇒udp://192.168.10.100:514
+            /// </summary>
+            public string Server { get; set; }
+            public string Facility { get; set; }
+            public string Format { get; set; }
+            public bool? SslEncrypt { get; set; }
+            public int? SslTimeout { get; set; }
+            public string SslCertFile { get; set; }
+            public string SslCertPassword { get; set; }
+            public string SslCertFriendryName { get; set; }
+            public bool? SslIgnoreCheck { get; set; }
+
+            public override string ToString()
+            {
+                return string.Format(
+                    "[ Server={0} Facility={1} Format={2} SslEncrypt={3} SslTimeout={4} SslCertFile={5} SslCertPassword={6} SslCertFriendryName={7} SslIgnoreCheck={8} ]",
+                    this.Server,
+                    this.Facility,
+                    this.Format,
+                    this.SslEncrypt,
+                    this.SslTimeout,
+                    this.SslCertFile,
+                    this.SslCertPassword,
+                    this.SslCertFriendryName,
+                    this.SslIgnoreCheck);
+            }
+        }
 
         public void Init()
         {
-            this.SyslogServer = "udp://localhost:514";
-            this.SyslogSslEncrypt = false;
-            this.SyslogSslTimeout = 1000;
-            this.SyslogSslCertFile = null;
-            this.SyslogSslCertPassword = null;
-            this.SyslogFormat = SyslogTransfer.Log.Syslog.SyslogFormat.RFC3164;
+            this.Syslog = new ParamSyslog()
+            {
+                Server = "udp://localhost:514",
+                Facility = "local0",
+                Format = "RFC3164",
+                SslEncrypt = false,
+                SslTimeout = 1000,
+                SslCertFile = null,
+                SslCertPassword = null,
+                SslCertFriendryName = null,
+                SslIgnoreCheck = false
+            };
         }
 
         public static Setting Deserialize(string filePath)
