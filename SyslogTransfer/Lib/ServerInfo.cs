@@ -40,7 +40,7 @@ namespace SyslogTransfer.Lib
             this.Protocol = tempProtocol.ToLower();
         }
 
-        public ServerInfo(string url, int defaultPort, string defaultProtocol) : this(url)
+        public ServerInfo(string uri, int defaultPort, string defaultProtocol) : this(uri)
         {
             if (Port == 0) { this.Port = defaultPort; }
             if (string.IsNullOrEmpty(Protocol)) { this.Protocol = defaultProtocol.ToLower(); }

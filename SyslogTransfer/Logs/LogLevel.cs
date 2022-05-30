@@ -1,4 +1,4 @@
-﻿namespace SyslogTransfer.Log
+﻿namespace SyslogTransfer.Logs
 {
     public enum LogLevel
     {

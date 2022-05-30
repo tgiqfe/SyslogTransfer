@@ -1,6 +1,6 @@
 ﻿using SyslogTransfer.Lib.Syslog;
 
-namespace SyslogTransfer.Log
+namespace SyslogTransfer.Logs
 {
     internal class LogLevelMapper
     {

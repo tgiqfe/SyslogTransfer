@@ -10,7 +10,7 @@ using SyslogTransfer.Lib.Syslog;
 
 namespace SyslogTransfer
 {
-    internal class Setting
+    public class Setting
     {
         public ParamSyslog Syslog { get; set; }
 
