@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SyslogTransfer.Lib.Syslog
 {
-    internal enum Severity
+	public enum Severity
     {
 		Emergency = 0,
 		Alert = 1,

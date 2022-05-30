@@ -7,7 +7,7 @@ using System.Net.Sockets;
 
 namespace SyslogTransfer.Lib.Syslog
 {
-    internal class SyslogUdpSender : SyslogSender
+    public class SyslogUdpSender : SyslogSender
     {
         private UdpClient _client = null;
 

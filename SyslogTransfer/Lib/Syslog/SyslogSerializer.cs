@@ -8,7 +8,7 @@ using System.Globalization;
 
 namespace SyslogTransfer.Lib.Syslog
 {
-    internal class SyslogSerializer
+    public class SyslogSerializer
     {
         const string _nilValue = "-";
 

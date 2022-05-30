@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace SyslogTransfer.Lib.Syslog
 {
-    internal class SyslogTcpSenderTLS : SyslogSender
+    public class SyslogTcpSenderTLS : SyslogSender
     {
         private enum MessageTransfer
         {
