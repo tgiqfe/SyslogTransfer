@@ -8,6 +8,7 @@ using SyslogTransfer.Lib.Syslog;
 using SyslogTransfer.Logs;
 using System.Reflection;
 using SyslogTransfer.Lib;
+using SyslogTransfer.PowerShell.Lib;
 
 namespace SyslogTransfer.PowerShell.Cmdlet
 {
@@ -30,7 +31,7 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         /// Serverの値を優先
         /// </summary>
         [Parameter]
-        public int Port { get; set; } = 514;
+        public int? Port { get; set; }
 
         /// <summary>
         /// Syslog送信時のプロトコル。
@@ -87,7 +88,7 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         /// </summary>
         //[Parameter(Mandatory = true)]
         //public string Message { get; set; }
-        
+
         /// <summary>
         /// Syslogフォーマット。RFC3164 or RFC5424
         /// </summary>
@@ -95,16 +96,16 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         public Format? Format { get; set; }
 
         /// <summary>
-        /// SSL接続時の読み取り/書き込み操作のタイムアウト。ミリ秒
-        /// </summary>
-        [Parameter]
-        public int? SslTimeout { get; set; }
-
-        /// <summary>
         /// SSL暗号化するかどうか
         /// </summary>
         [Parameter]
         public SwitchParameter SslEncrypt { get; set; }
+
+        /// <summary>
+        /// SSL接続時の読み取り/書き込み操作のタイムアウト。ミリ秒
+        /// </summary>
+        [Parameter]
+        public int? SslTimeout { get; set; }
 
         /// <summary>
         /// SSL暗号化時に使用するクライアント証明書へのパス。PKCS12
@@ -131,6 +132,12 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         [Parameter]
         public SwitchParameter SslIgnoreCheck { get; set; }
 
+        /// <summary>
+        /// コマンドレット実行時に、同時にセッション開始
+        /// </summary>
+        [Parameter]
+        public SwitchParameter SessionStart { get; set; }
+
         #endregion
 
         private string _currentDirectory = null;
@@ -144,7 +151,82 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         protected override void ProcessRecord()
         {
+            var session = new SyslogSession();
 
+            if (!string.IsNullOrEmpty(this.Server))
+            {
+                var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
+                session.Server = info.Server;
+                session.Port = info.Port;
+                session.Protocol = info.Protocol;
+            }
+            else if (this.Port != null)
+            {
+                session.Port = Port;
+            }
+            else if (!string.IsNullOrEmpty(this.Protocol))
+            {
+                session.Protocol = Protocol;
+            }
+
+            if (this.Date != null)
+            {
+                session.Date = Date;
+            }
+            if (this.Facility != null)
+            {
+                session.Facility = Facility;
+            }
+            if (this.Severity != null)
+            {
+                session.Severity = Severity;
+            }
+            if (!string.IsNullOrEmpty(this.HostName))
+            {
+                session.HostName = HostName;
+            }
+            if (!string.IsNullOrEmpty(this.AppName))
+            {
+                session.AppName = AppName;
+            }
+            if (!string.IsNullOrEmpty(this.ProcId))
+            {
+                session.ProcId = ProcId;
+            }
+            if (!string.IsNullOrEmpty(this.MsgId))
+            {
+                session.MsgId = MsgId;
+            }
+            if (this.Format != null)
+            {
+                session.Format = Format;
+            }
+
+            session.SslEncrypt = SslEncrypt;
+            if (this.SslTimeout != null)
+            {
+                session.SslTimeout = SslTimeout;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertFile))
+            {
+                session.SslCertFile = SslCertFile;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertPassword))
+            {
+                session.SslCertPassword = SslCertPassword;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertFriendryName))
+            {
+                session.SslCertFriendryName = SslCertFriendryName;
+            }
+            session.SslIgnoreCheck = SslIgnoreCheck;
+
+            if (this.SessionStart)
+            {
+                session.Start();
+            }
+
+            WriteObject(session);
         }
 
         protected override void EndProcessing()

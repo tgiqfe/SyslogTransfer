@@ -13,7 +13,7 @@ namespace SyslogTransfer.Logs
     /// <summary>
     /// Syslogサーバへログを転送する
     /// </summary>
-    public class TransportSyslog : IDisposable
+    internal class TransportSyslog : IDisposable
     {
         public bool Enabled { get; set; }
 

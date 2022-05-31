@@ -30,14 +30,14 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         /// Serverの値を優先
         /// </summary>
         [Parameter]
-        public int Port { get; set; } = 514;
+        public int? Port { get; set; }
 
         /// <summary>
         /// Syslog送信時のプロトコル。
         /// Serverの値を優先
         /// </summary>
         [Parameter, ValidateSet("Udp", "Tcp")]
-        public string Protocol { get; set; } = "Udp";
+        public string Protocol { get; set; }
 
         /// <summary>
         /// Syslogデータに含む日時情報。
@@ -147,49 +147,56 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         protected override void ProcessRecord()
         {
-            var info = new ServerInfo(Server, defaultPort: Port, defaultProtocol: Protocol);
-            var msg = new SyslogMessage(
-                this.Date ?? DateTime.Now,
-                this.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
-                this.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
-                this.HostName ?? Environment.MachineName,
-                this.AppName ?? "SyslogTransfer.PowerShell",
-                this.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
-                this.MsgId ?? "-",
-                this.Message);
+            if (this.Session == null)
+            {
+                var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
+                var msg = new SyslogMessage(
+                    this.Date ?? DateTime.Now,
+                    this.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
+                    this.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
+                    this.HostName ?? Environment.MachineName,
+                    this.AppName ?? "SyslogTransfer.PowerShell",
+                    this.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
+                    this.MsgId ?? "-",
+                    this.Message);
 
-            if (info.Protocol == "udp")
-            {
-                //  UDPでSyslog転送
-                using (var sender = new SyslogUdpSender(info.Server, info.Port, Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
+                if (info.Protocol == "udp")
                 {
-                    sender.SendAsync(msg).Wait();
+                    //  UDPでSyslog転送
+                    using (var sender = new SyslogUdpSender(info.Server, info.Port, Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
+                    {
+                        sender.SendAsync(msg).Wait();
+                    }
                 }
-            }
-            else if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
-            {
-                //  TCPでSyslog転送
-                using (SyslogSender sender = this.SslEncrypt ?
-                    new SyslogTcpSenderTLS(
-                        info.Server,
-                        info.Port,
-                        Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164,
-                        SslTimeout ?? 1000,
-                        SslCertFile,
-                        SslCertPassword,
-                        SslCertFriendryName,
-                        SslIgnoreCheck) :
-                    new SyslogTcpSender(
-                        info.Server,
-                        info.Port,
-                        Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
+                else if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
                 {
-                    sender.SendAsync(msg).Wait();
+                    //  TCPでSyslog転送
+                    using (SyslogSender sender = this.SslEncrypt ?
+                        new SyslogTcpSenderTLS(
+                            info.Server,
+                            info.Port,
+                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164,
+                            SslTimeout ?? 1000,
+                            SslCertFile,
+                            SslCertPassword,
+                            SslCertFriendryName,
+                            SslIgnoreCheck) :
+                        new SyslogTcpSender(
+                            info.Server,
+                            info.Port,
+                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
+                    {
+                        sender.SendAsync(msg).Wait();
+                    }
+                }
+                else
+                {
+                    //  プロトコル不明
                 }
             }
             else
             {
-                //  プロトコル不明
+                Session.Start();
             }
         }
 
