@@ -8,7 +8,7 @@ using SyslogTransfer.Lib;
 using System.Text.RegularExpressions;
 using System.Net.Sockets;
 
-namespace SyslogTransfer.Log
+namespace SyslogTransfer.Logs
 {
     /// <summary>
     /// Syslogサーバへログを転送する
@@ -24,6 +24,8 @@ namespace SyslogTransfer.Log
         public string ProcId { get; set; }
         public string MsgId { get; set; }
         public StructuredData[] StructuredDataParams { get; set; }
+
+        public TransportSyslog() { }
 
         public TransportSyslog(Setting setting)
         {

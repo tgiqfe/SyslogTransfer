@@ -10,7 +10,7 @@ namespace SyslogTransfer.Lib
     /// <summary>
     /// URIからサーバアドレス(IP or FQDN)、ポート、プロトコルを格納
     /// </summary>
-    internal class ServerInfo
+    public class ServerInfo
     {
         public string Server { get; set; }
         public int Port { get; set; }
@@ -40,7 +40,7 @@ namespace SyslogTransfer.Lib
             this.Protocol = tempProtocol.ToLower();
         }
 
-        public ServerInfo(string url, int defaultPort, string defaultProtocol) : this(url)
+        public ServerInfo(string uri, int defaultPort, string defaultProtocol) : this(uri)
         {
             if (Port == 0) { this.Port = defaultPort; }
             if (string.IsNullOrEmpty(Protocol)) { this.Protocol = defaultProtocol.ToLower(); }

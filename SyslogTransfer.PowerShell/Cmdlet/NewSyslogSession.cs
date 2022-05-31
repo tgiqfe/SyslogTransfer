@@ -8,11 +8,12 @@ using SyslogTransfer.Lib.Syslog;
 using SyslogTransfer.Logs;
 using System.Reflection;
 using SyslogTransfer.Lib;
+using SyslogTransfer.PowerShell.Lib;
 
 namespace SyslogTransfer.PowerShell.Cmdlet
 {
-    [Cmdlet(VerbsCommunications.Send, "SyslogMessage")]
-    internal class SendSyslogMessage : PSCmdlet
+    [Cmdlet(VerbsCommon.New, "SyslogSession")]
+    internal class NewSyslogSession : PSCmdlet
     {
         #region Public parameter
 
@@ -37,7 +38,7 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         /// Serverの値を優先
         /// </summary>
         [Parameter, ValidateSet("Udp", "Tcp")]
-        public string Protocol { get; set; }
+        public string Protocol { get; set; } = "Udp";
 
         /// <summary>
         /// Syslogデータに含む日時情報。
@@ -85,8 +86,8 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         /// <summary>
         /// Syslogメッセージ本体
         /// </summary>
-        [Parameter(Mandatory = true)]
-        public string Message { get; set; }
+        //[Parameter(Mandatory = true)]
+        //public string Message { get; set; }
 
         /// <summary>
         /// Syslogフォーマット。RFC3164 or RFC5424
@@ -131,8 +132,11 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         [Parameter]
         public SwitchParameter SslIgnoreCheck { get; set; }
 
+        /// <summary>
+        /// コマンドレット実行時に、同時にセッション開始
+        /// </summary>
         [Parameter]
-        public Lib.SyslogSession Session { get; set; }
+        public SwitchParameter SessionStart { get; set; }
 
         #endregion
 
@@ -147,57 +151,82 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         protected override void ProcessRecord()
         {
-            if (this.Session == null)
+            var session = new SyslogSession();
+
+            if (!string.IsNullOrEmpty(this.Server))
             {
                 var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
-                var msg = new SyslogMessage(
-                    this.Date ?? DateTime.Now,
-                    this.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
-                    this.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
-                    this.HostName ?? Environment.MachineName,
-                    this.AppName ?? "SyslogTransfer.PowerShell",
-                    this.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
-                    this.MsgId ?? "-",
-                    this.Message);
-
-                if (info.Protocol == "udp")
-                {
-                    //  UDPでSyslog転送
-                    using (var sender = new SyslogUdpSender(info.Server, info.Port, Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
-                    {
-                        sender.SendAsync(msg).Wait();
-                    }
-                }
-                else if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
-                {
-                    //  TCPでSyslog転送
-                    using (SyslogSender sender = this.SslEncrypt ?
-                        new SyslogTcpSenderTLS(
-                            info.Server,
-                            info.Port,
-                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164,
-                            SslTimeout ?? 1000,
-                            SslCertFile,
-                            SslCertPassword,
-                            SslCertFriendryName,
-                            SslIgnoreCheck) :
-                        new SyslogTcpSender(
-                            info.Server,
-                            info.Port,
-                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
-                    {
-                        sender.SendAsync(msg).Wait();
-                    }
-                }
-                else
-                {
-                    //  プロトコル不明
-                }
+                session.Server = info.Server;
+                session.Port = info.Port;
+                session.Protocol = info.Protocol;
             }
-            else
+            else if (this.Port != null)
             {
-                Session.Start();
+                session.Port = Port;
             }
+            else if (!string.IsNullOrEmpty(this.Protocol))
+            {
+                session.Protocol = Protocol;
+            }
+
+            if (this.Date != null)
+            {
+                session.Date = Date;
+            }
+            if (this.Facility != null)
+            {
+                session.Facility = Facility;
+            }
+            if (this.Severity != null)
+            {
+                session.Severity = Severity;
+            }
+            if (!string.IsNullOrEmpty(this.HostName))
+            {
+                session.HostName = HostName;
+            }
+            if (!string.IsNullOrEmpty(this.AppName))
+            {
+                session.AppName = AppName;
+            }
+            if (!string.IsNullOrEmpty(this.ProcId))
+            {
+                session.ProcId = ProcId;
+            }
+            if (!string.IsNullOrEmpty(this.MsgId))
+            {
+                session.MsgId = MsgId;
+            }
+            if (this.Format != null)
+            {
+                session.Format = Format;
+            }
+
+            session.SslEncrypt = SslEncrypt;
+            if (this.SslTimeout != null)
+            {
+                session.SslTimeout = SslTimeout;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertFile))
+            {
+                session.SslCertFile = SslCertFile;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertPassword))
+            {
+                session.SslCertPassword = SslCertPassword;
+            }
+            if (!string.IsNullOrEmpty(this.SslCertFriendryName))
+            {
+                session.SslCertFriendryName = SslCertFriendryName;
+            }
+            session.SslIgnoreCheck = SslIgnoreCheck;
+
+            if (this.SessionStart)
+            {
+                session.Start();
+            }
+
+            WriteObject(session);
         }
 
         protected override void EndProcessing()
