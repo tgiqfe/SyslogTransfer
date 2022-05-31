@@ -14,6 +14,8 @@ namespace SyslogTransfer.PowerShell.Cmdlet
     [Cmdlet(VerbsCommunications.Send, "SyslogMessage")]
     internal class SendSyslogMessage : PSCmdlet
     {
+        #region Public parameter
+
         /// <summary>
         /// Syslog送信先サーバ。
         /// udp://192.168.1.100:514 形式、もしくは、
@@ -93,16 +95,16 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         public Format? Format { get; set; }
 
         /// <summary>
-        /// SSL接続時の読み取り/書き込み操作のタイムアウト。ミリ秒
-        /// </summary>
-        [Parameter]
-        public int? SslTimeout { get; set; }
-
-        /// <summary>
         /// SSL暗号化するかどうか
         /// </summary>
         [Parameter]
         public SwitchParameter SslEncrypt { get; set; }
+
+        /// <summary>
+        /// SSL接続時の読み取り/書き込み操作のタイムアウト。ミリ秒
+        /// </summary>
+        [Parameter]
+        public int? SslTimeout { get; set; }
 
         /// <summary>
         /// SSL暗号化時に使用するクライアント証明書へのパス。PKCS12
@@ -131,6 +133,17 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         [Parameter]
         public Lib.SyslogSession Session { get; set; }
+
+        #endregion
+
+        private string _currentDirectory = null;
+
+        protected override void BeginProcessing()
+        {
+            //  カレントディレクトリカレントディレクトリの一時変更
+            _currentDirectory = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = this.SessionState.Path.CurrentFileSystemLocation.Path;
+        }
 
         protected override void ProcessRecord()
         {
@@ -178,6 +191,12 @@ namespace SyslogTransfer.PowerShell.Cmdlet
             {
                 //  プロトコル不明
             }
+        }
+
+        protected override void EndProcessing()
+        {
+            //  カレントディレクトリを戻す
+            Environment.CurrentDirectory = _currentDirectory;
         }
     }
 }
