@@ -10,7 +10,7 @@ namespace SyslogTransfer.Lib
     /// <summary>
     /// URIからサーバアドレス(IP or FQDN)、ポート、プロトコルを格納
     /// </summary>
-    internal class ServerInfo
+    public class ServerInfo
     {
         public string Server { get; set; }
         public int Port { get; set; }

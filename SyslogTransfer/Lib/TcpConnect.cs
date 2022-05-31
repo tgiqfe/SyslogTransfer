@@ -11,7 +11,7 @@ namespace SyslogTransfer.Lib
     /// <summary>
     /// TCP接続可否チェック用
     /// </summary>
-    internal class TcpConnect
+    public class TcpConnect
     {
         private bool _reachable { get; set; }
         private bool _success { get; set; }
