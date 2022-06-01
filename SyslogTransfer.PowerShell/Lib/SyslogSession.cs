@@ -34,6 +34,95 @@ namespace SyslogTransfer.PowerShell.Lib
 
         public SyslogSession() { }
 
+        #region Set parameter methods
+
+        public void SetServer(string server)
+        {
+            if (!string.IsNullOrEmpty(server)) { this.Server = server; }
+        }
+
+        public void SetPort(int? port)
+        {
+            if (port != null) { this.Port = port; }
+        }
+
+        public void SetProtocol(string protocol)
+        {
+            if (!string.IsNullOrEmpty(protocol)) { this.Protocol = protocol; }
+        }
+
+        public void SetDate(DateTime? date)
+        {
+            if (date != null) { this.Date = date; }
+        }
+
+        public void SetFacility(Facility? facility)
+        {
+            if (facility != null) { this.Facility = facility; }
+        }
+
+        public void SetSeverity(Severity? severity)
+        {
+            if (severity != null) { this.Severity = severity; }
+        }
+
+        public void SetHostName(string hostName)
+        {
+            if (!string.IsNullOrEmpty(hostName)) { this.HostName = hostName; }
+        }
+
+        public void SetAppName(string appName)
+        {
+            if (!string.IsNullOrEmpty(appName)) { this.AppName = appName; }
+        }
+
+        public void SetProcId(string procId)
+        {
+            if (!string.IsNullOrEmpty(procId)) { this.ProcId = procId; }
+        }
+
+        public void SetMsgId(string msgId)
+        {
+            if (!string.IsNullOrEmpty(msgId)) { this.MsgId = msgId; }
+        }
+
+        public void SetFormat(Format? format)
+        {
+            if (format != null) { this.Format = format; }
+        }
+
+        public void SetSslEncrypt(bool sslEncrypt)
+        {
+            this.SslEncrypt = sslEncrypt;
+        }
+
+        public void SetSslTimeout(int? sslTimeout)
+        {
+            if (sslTimeout != null) { this.SslTimeout = sslTimeout; }
+        }
+
+        public void SetSslCertFile(string sslCertFile)
+        {
+            if (!string.IsNullOrEmpty(sslCertFile)) { this.SslCertFile = sslCertFile; }
+        }
+
+        public void SetSslCertPassword(string sslCertPassword)
+        {
+            if (!string.IsNullOrEmpty(sslCertPassword)) { this.SslCertPassword = sslCertPassword; }
+        }
+
+        public void SetSslCertFriendryName(string sslCertFriendryName)
+        {
+            if (!string.IsNullOrEmpty(sslCertFriendryName)) { this.SslCertFriendryName = sslCertFriendryName; }
+        }
+
+        public void SetSslIgnoreCheck(bool sslIgnoreCheck)
+        {
+            this.SslIgnoreCheck = sslIgnoreCheck;
+        }
+
+        #endregion
+
         public void Start()
         {
             if (IsOpen) { return; }
