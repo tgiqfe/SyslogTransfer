@@ -196,7 +196,37 @@ namespace SyslogTransfer.PowerShell.Cmdlet
             }
             else
             {
-                Session.Start();
+                if (!Session.IsOpen)
+                {
+                    Session.SetServer(this.Server);
+                    Session.SetPort(this.Port);
+                    Session.SetProtocol(this.Protocol);
+                    Session.SetDate(this.Date);
+                    Session.SetFacility(this.Facility);
+                    Session.SetSeverity(this.Severity);
+                    Session.SetHostName(this.HostName);
+                    Session.SetAppName(this.AppName);
+                    Session.SetProcId(this.ProcId);
+                    Session.SetMsgId(this.MsgId);
+                    Session.SetFormat(this.Format);
+                    Session.SetSslEncrypt(this.SslEncrypt);
+                    Session.SetSslTimeout(this.SslTimeout);
+                    Session.SetSslCertFile(this.SslCertFile);
+                    Session.SetSslCertPassword(this.SslCertPassword);
+                    Session.SetSslCertFriendryName(this.SslCertFriendryName);
+                    Session.SetSslIgnoreCheck(this.SslIgnoreCheck);
+                    Session.Start();
+                }
+
+                var msg = new SyslogMessage(
+                    Session.Date ?? DateTime.Now,
+                    Session.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
+                    Session.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
+                    Session.HostName ?? Environment.MachineName,
+                    Session.AppName ?? "SyslogTransfer.PowerShell",
+                    Session.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
+                    Session.MsgId ?? "-",
+                    this.Message);
             }
         }
 
