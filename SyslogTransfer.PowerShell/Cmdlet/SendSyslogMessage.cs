@@ -196,7 +196,20 @@ namespace SyslogTransfer.PowerShell.Cmdlet
             }
             else
             {
-                Session.Start();
+
+
+
+                Session?.Start();
+
+                var msg = new SyslogMessage(
+                    Session.Date ?? DateTime.Now,
+                    Session.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
+                    Session.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
+                    Session.HostName ?? Environment.MachineName,
+                    Session.AppName ?? "SyslogTransfer.PowerShell",
+                    Session.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
+                    Session.MsgId ?? "-",
+                    this.Message);
             }
         }
 

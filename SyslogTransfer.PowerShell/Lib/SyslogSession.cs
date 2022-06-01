@@ -10,7 +10,7 @@ namespace SyslogTransfer.PowerShell.Lib
 {
     internal class SyslogSession : IDisposable
     {
-        public bool Enabled { get; private set; }
+        public bool IsOpen { get; private set; }
 
         public string Server { get; set; }
         public int? Port { get; set; }
@@ -36,18 +36,20 @@ namespace SyslogTransfer.PowerShell.Lib
 
         public void Start()
         {
+            if (IsOpen) { return; }
+
             var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol);
 
             if (info.Protocol == "udp")
             {
                 //  UDPでSyslog転送
-                this.Enabled = true;
+                this.IsOpen = true;
                 this._sender = new SyslogUdpSender(info.Server, info.Port, this.Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164);
             }
             else if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
             {
                 //  TCPでSyslog転送
-                this.Enabled = true;
+                this.IsOpen = true;
                 this._sender = this.SslEncrypt ?
                     new SyslogTcpSenderTLS(
                         info.Server,
