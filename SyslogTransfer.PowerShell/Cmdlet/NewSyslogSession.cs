@@ -151,79 +151,30 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         protected override void ProcessRecord()
         {
-            var session = new SyslogSession();
-
-            if (!string.IsNullOrEmpty(this.Server))
+            var session = new SyslogSession()
             {
-                var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
-                session.Server = info.Server;
-                session.Port = info.Port;
-                session.Protocol = info.Protocol;
-            }
-            else if (this.Port != null)
-            {
-                session.Port = Port;
-            }
-            else if (!string.IsNullOrEmpty(this.Protocol))
-            {
-                session.Protocol = Protocol;
-            }
-
-            if (this.Date != null)
-            {
-                session.Date = Date;
-            }
-            if (this.Facility != null)
-            {
-                session.Facility = Facility;
-            }
-            if (this.Severity != null)
-            {
-                session.Severity = Severity;
-            }
-            if (!string.IsNullOrEmpty(this.HostName))
-            {
-                session.HostName = HostName;
-            }
-            if (!string.IsNullOrEmpty(this.AppName))
-            {
-                session.AppName = AppName;
-            }
-            if (!string.IsNullOrEmpty(this.ProcId))
-            {
-                session.ProcId = ProcId;
-            }
-            if (!string.IsNullOrEmpty(this.MsgId))
-            {
-                session.MsgId = MsgId;
-            }
-            if (this.Format != null)
-            {
-                session.Format = Format;
-            }
-
-            session.SslEncrypt = SslEncrypt;
-            if (this.SslTimeout != null)
-            {
-                session.SslTimeout = SslTimeout;
-            }
-            if (!string.IsNullOrEmpty(this.SslCertFile))
-            {
-                session.SslCertFile = SslCertFile;
-            }
-            if (!string.IsNullOrEmpty(this.SslCertPassword))
-            {
-                session.SslCertPassword = SslCertPassword;
-            }
-            if (!string.IsNullOrEmpty(this.SslCertFriendryName))
-            {
-                session.SslCertFriendryName = SslCertFriendryName;
-            }
-            session.SslIgnoreCheck = SslIgnoreCheck;
+                Server = this.Server,
+                Port = this.Port,
+                Protocol = this.Protocol,
+                Date = this.Date,
+                Facility = this.Facility,
+                Severity = this.Severity,
+                HostName = this.HostName,
+                AppName = this.AppName,
+                ProcId = this.ProcId,
+                MsgId = this.MsgId,
+                Format = this.Format,
+                SslEncrypt = this.SslEncrypt,
+                SslTimeout = this.SslTimeout,
+                SslCertFile = this.SslCertFile,
+                SslCertPassword = this.SslCertPassword,
+                SslCertFriendryName = this.SslCertFriendryName,
+                SslIgnoreCheck = this.SslIgnoreCheck,
+            };
 
             if (this.SessionStart)
             {
-                session.Start();
+                session.Open();
             }
 
             WriteObject(session);

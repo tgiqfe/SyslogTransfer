@@ -8,6 +8,7 @@ using SyslogTransfer.Lib.Syslog;
 using SyslogTransfer.Logs;
 using System.Reflection;
 using SyslogTransfer.Lib;
+using SyslogTransfer.PowerShell.Lib;
 
 namespace SyslogTransfer.PowerShell.Cmdlet
 {
@@ -132,7 +133,7 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         public SwitchParameter SslIgnoreCheck { get; set; }
 
         [Parameter]
-        public Lib.SyslogSession Session { get; set; }
+        public SyslogSession Session { get; set; }
 
         #endregion
 
@@ -149,84 +150,44 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         {
             if (this.Session == null)
             {
-                var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
-                var msg = new SyslogMessage(
-                    this.Date ?? DateTime.Now,
-                    this.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
-                    this.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
-                    this.HostName ?? Environment.MachineName,
-                    this.AppName ?? "SyslogTransfer.PowerShell",
-                    this.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
-                    this.MsgId ?? "-",
-                    this.Message);
-
-                if (info.Protocol == "udp")
+                using (var session = new SyslogSession()
                 {
-                    //  UDPでSyslog転送
-                    using (var sender = new SyslogUdpSender(info.Server, info.Port, Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
-                    {
-                        sender.SendAsync(msg).Wait();
-                    }
-                }
-                else if (new TcpConnect(info.Server, info.Port).TcpConnectSuccess)
+                    Server = this.Server,
+                    Port = this.Port,
+                    Protocol = this.Protocol,
+                    Date = this.Date,
+                    Facility = this.Facility,
+                    Severity = this.Severity,
+                    HostName = this.HostName,
+                    AppName = this.AppName,
+                    ProcId = this.ProcId,
+                    MsgId = this.MsgId,
+                    Format = this.Format,
+                    SslEncrypt = this.SslEncrypt,
+                    SslTimeout = this.SslTimeout,
+                    SslCertFile = this.SslCertFile,
+                    SslCertPassword = this.SslCertPassword,
+                    SslCertFriendryName = this.SslCertFriendryName,
+                    SslIgnoreCheck = this.SslIgnoreCheck,
+                })
                 {
-                    //  TCPでSyslog転送
-                    using (SyslogSender sender = this.SslEncrypt ?
-                        new SyslogTcpSenderTLS(
-                            info.Server,
-                            info.Port,
-                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164,
-                            SslTimeout ?? 1000,
-                            SslCertFile,
-                            SslCertPassword,
-                            SslCertFriendryName,
-                            SslIgnoreCheck) :
-                        new SyslogTcpSender(
-                            info.Server,
-                            info.Port,
-                            Format ?? SyslogTransfer.Lib.Syslog.Format.RFC3164))
-                    {
-                        sender.SendAsync(msg).Wait();
-                    }
-                }
-                else
-                {
-                    //  プロトコル不明
+                    session.Send(this.Message);
                 }
             }
             else
             {
-                if (!Session.IsOpen)
-                {
-                    Session.SetServer(this.Server);
-                    Session.SetPort(this.Port);
-                    Session.SetProtocol(this.Protocol);
-                    Session.SetDate(this.Date);
-                    Session.SetFacility(this.Facility);
-                    Session.SetSeverity(this.Severity);
-                    Session.SetHostName(this.HostName);
-                    Session.SetAppName(this.AppName);
-                    Session.SetProcId(this.ProcId);
-                    Session.SetMsgId(this.MsgId);
-                    Session.SetFormat(this.Format);
-                    Session.SetSslEncrypt(this.SslEncrypt);
-                    Session.SetSslTimeout(this.SslTimeout);
-                    Session.SetSslCertFile(this.SslCertFile);
-                    Session.SetSslCertPassword(this.SslCertPassword);
-                    Session.SetSslCertFriendryName(this.SslCertFriendryName);
-                    Session.SetSslIgnoreCheck(this.SslIgnoreCheck);
-                    Session.Start();
-                }
+                Session.Date = this.Date;
+                Session.Facility = this.Facility;
+                Session.Severity = this.Severity;
+                Session.HostName = this.HostName;
+                Session.AppName = this.AppName;
+                Session.ProcId = this.ProcId;
+                Session.MsgId = this.MsgId;
+                Session.Format = this.Format;
 
-                var msg = new SyslogMessage(
-                    Session.Date ?? DateTime.Now,
-                    Session.Facility ?? SyslogTransfer.Lib.Syslog.Facility.UserLevelMessages,
-                    Session.Severity ?? SyslogTransfer.Lib.Syslog.Severity.Informational,
-                    Session.HostName ?? Environment.MachineName,
-                    Session.AppName ?? "SyslogTransfer.PowerShell",
-                    Session.ProcId ?? System.Diagnostics.Process.GetCurrentProcess().Id.ToString(),
-                    Session.MsgId ?? "-",
-                    this.Message);
+                Session.Open();
+
+                Session.Send(this.Message);
             }
         }
 
