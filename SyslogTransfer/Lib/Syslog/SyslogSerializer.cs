@@ -155,9 +155,6 @@ namespace SyslogTransfer.Lib.Syslog
             return Encoding.UTF8.GetBytes(sb.ToString());
         }
 
-
-
-
         private static string ToAsciiField(string text, int maxLength, bool sdName = false)
         {
             if (string.IsNullOrWhiteSpace(text))
