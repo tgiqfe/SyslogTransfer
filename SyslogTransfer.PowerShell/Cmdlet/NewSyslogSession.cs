@@ -13,7 +13,7 @@ using SyslogTransfer.PowerShell.Lib;
 namespace SyslogTransfer.PowerShell.Cmdlet
 {
     [Cmdlet(VerbsCommon.New, "SyslogSession")]
-    internal class NewSyslogSession : PSCmdlet
+    public class NewSyslogSession : PSCmdlet
     {
         #region Public parameter
 
@@ -132,12 +132,6 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         [Parameter]
         public SwitchParameter SslIgnoreCheck { get; set; }
 
-        /// <summary>
-        /// コマンドレット実行時に、同時にセッション開始
-        /// </summary>
-        [Parameter]
-        public SwitchParameter SessionStart { get; set; }
-
         #endregion
 
         private string _currentDirectory = null;
@@ -171,11 +165,6 @@ namespace SyslogTransfer.PowerShell.Cmdlet
                 SslCertFriendryName = this.SslCertFriendryName,
                 SslIgnoreCheck = this.SslIgnoreCheck,
             };
-
-            if (this.SessionStart)
-            {
-                session.Open();
-            }
 
             WriteObject(session);
         }

@@ -17,7 +17,7 @@ namespace SyslogTransfer.Lib.Syslog
         const string _version = "1";
 
         /// <summary>
-        /// RFC3624
+        /// RFC3164
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>

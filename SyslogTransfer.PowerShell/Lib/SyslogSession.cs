@@ -8,10 +8,8 @@ using SyslogTransfer.Lib;
 
 namespace SyslogTransfer.PowerShell.Lib
 {
-    internal class SyslogSession : IDisposable
+    public class SyslogSession : IDisposable
     {
-        public bool IsOpen { get; private set; }
-
         #region Parameter
 
         private string _server = null;
@@ -120,9 +118,18 @@ namespace SyslogTransfer.PowerShell.Lib
 
         #endregion
 
+        public bool IsOpen { get; private set; }
+
+        public bool Effemeral { get; private set; }
+
         private SyslogSender _sender = null;
 
         public SyslogSession() { }
+
+        public SyslogSession(bool effemeral)
+        {
+            this.Effemeral = effemeral;
+        }
 
         public void Send(string message)
         {
@@ -142,7 +149,7 @@ namespace SyslogTransfer.PowerShell.Lib
         {
             if (IsOpen) { return; }
 
-            var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol);
+            var info = new ServerInfo(Server, defaultPort: Port ?? 514, defaultProtocol: Protocol ?? "udp");
 
             if (info.Protocol == "udp")
             {
@@ -175,8 +182,6 @@ namespace SyslogTransfer.PowerShell.Lib
             }
         }
 
-
-
         ~SyslogSession()
         {
             Close();
@@ -184,10 +189,12 @@ namespace SyslogTransfer.PowerShell.Lib
 
         public void Close()
         {
-            if (_sender != null)
-            {
-                _sender.Dispose();
-            }
+            if (_sender != null) _sender.Dispose();
+        }
+
+        public void CloseIfEffemeral()
+        {
+            if (Effemeral) Close();
         }
 
         #region Dispose

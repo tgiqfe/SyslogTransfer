@@ -13,7 +13,7 @@ using SyslogTransfer.PowerShell.Lib;
 namespace SyslogTransfer.PowerShell.Cmdlet
 {
     [Cmdlet(VerbsCommunications.Send, "SyslogMessage")]
-    internal class SendSyslogMessage : PSCmdlet
+    public class SendSyslogMessage : PSCmdlet
     {
         #region Public parameter
 
@@ -132,6 +132,9 @@ namespace SyslogTransfer.PowerShell.Cmdlet
         [Parameter]
         public SwitchParameter SslIgnoreCheck { get; set; }
 
+        /// <summary>
+        /// 事前定義済み/使いまわしのセッションを使用する場合に指定
+        /// </summary>
         [Parameter]
         public SyslogSession Session { get; set; }
 
@@ -148,47 +151,30 @@ namespace SyslogTransfer.PowerShell.Cmdlet
 
         protected override void ProcessRecord()
         {
-            if (this.Session == null)
+            this.Session ??= new SyslogSession(effemeral: true)
             {
-                using (var session = new SyslogSession()
-                {
-                    Server = this.Server,
-                    Port = this.Port,
-                    Protocol = this.Protocol,
-                    Date = this.Date,
-                    Facility = this.Facility,
-                    Severity = this.Severity,
-                    HostName = this.HostName,
-                    AppName = this.AppName,
-                    ProcId = this.ProcId,
-                    MsgId = this.MsgId,
-                    Format = this.Format,
-                    SslEncrypt = this.SslEncrypt,
-                    SslTimeout = this.SslTimeout,
-                    SslCertFile = this.SslCertFile,
-                    SslCertPassword = this.SslCertPassword,
-                    SslCertFriendryName = this.SslCertFriendryName,
-                    SslIgnoreCheck = this.SslIgnoreCheck,
-                })
-                {
-                    session.Send(this.Message);
-                }
-            }
-            else
-            {
-                Session.Date = this.Date;
-                Session.Facility = this.Facility;
-                Session.Severity = this.Severity;
-                Session.HostName = this.HostName;
-                Session.AppName = this.AppName;
-                Session.ProcId = this.ProcId;
-                Session.MsgId = this.MsgId;
-                Session.Format = this.Format;
+                Server = this.Server,
+                Port = this.Port,
+                Protocol = this.Protocol,
+                SslEncrypt = this.SslEncrypt,
+                SslTimeout = this.SslTimeout,
+                SslCertFile = this.SslCertFile,
+                SslCertPassword = this.SslCertPassword,
+                SslCertFriendryName = this.SslCertFriendryName,
+                SslIgnoreCheck = this.SslIgnoreCheck,
+            };
+            Session.Date = this.Date;
+            Session.Facility = this.Facility;
+            Session.Severity = this.Severity;
+            Session.HostName = this.HostName;
+            Session.AppName = this.AppName;
+            Session.ProcId = this.ProcId;
+            Session.MsgId = this.MsgId;
+            Session.Format = this.Format;
 
-                Session.Open();
-
-                Session.Send(this.Message);
-            }
+            Session.Open();
+            Session.Send(this.Message);
+            Session.CloseIfEffemeral();
         }
 
         protected override void EndProcessing()
